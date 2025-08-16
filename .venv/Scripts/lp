@@ -1,0 +1,70 @@
+#!C:\Users\Shlok\Desktop\Projects\bruce-bot\.venv\Scripts\python.exe
+
+"""
+By image:
+  lp SCREENSHOT [COUNT]
+
+SCREENSHOT is a path to a Letterpress screenshot.
+
+Run server:
+  lp --listen=ADDRESS
+
+ADDRESS is the bind address for a server.
+
+For example, you could run:
+  lp --listen=127.0.0.1:8081
+and then visit http://127.0.0.1:8081 in your browser.
+
+You can specify a language in your environment as LP_LANG, so for example
+you could run:
+  LP_LANG=de lp [args]
+"""
+
+import sys
+
+from lp.game import Grid
+from lp.server import serve
+
+
+def print_docs_and_exit():
+    print(__doc__.strip())
+    sys.exit(1)
+
+
+def get_count_from(source):
+    try:
+        return int(source)
+    except ValueError:
+        print('{!r} is not a number'.format(source))
+        sys.exit(1)
+
+
+def go_with_image():
+    if len(sys.argv) == 3:
+        count = get_count_from(sys.argv[2])
+    else:
+        count = 10
+
+    with open(sys.argv[1], 'rb') as image:
+        grid = Grid.from_image(image)
+
+    print(grid)
+    print('\n'.join((
+        '{:>3} - {}'.format('win' if s == float('inf') else s, w)
+        for w, s in grid.get_best_words()[:count]
+    )))
+
+
+if __name__ == '__main__':
+    if '--help' in sys.argv:
+        print_docs_and_exit()
+
+    elif len(sys.argv) == 2 and sys.argv[1].startswith('--listen='):
+        address = sys.argv[1].split('=', 1)[1]
+        serve(address)
+
+    elif len(sys.argv) in [2, 3]:
+        go_with_image()
+
+    else:
+        print_docs_and_exit()
